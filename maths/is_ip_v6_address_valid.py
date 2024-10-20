@@ -52,7 +52,7 @@ def is_ip_v6_address_valid(ip_v6_address: str) -> bool:
     index = 0
     for segment in blocks:
         if (segment == ""):
-            if (number_of_empty == 1) and (blocks[index-1]!=""): #If we've seen a double colon already and the previous block wasn't caused from "::" or "::x" or "x::"
+            if ((number_of_empty == 1) and (blocks[index-1]!="") or (number_of_empty > 1)): #If we've seen a double colon already and the previous block wasn't caused from "::" or "::x" or "x::", or if we've seen too many empty blocks (which implies multiple double colons)
                 return False
             number_of_empty += 1
         else:
@@ -76,14 +76,6 @@ def is_16_bit_number(x: str) -> bool:
         #It wasn't valid hex
         return False
 
-
-
-print(is_16_bit_number(""))
-print(is_16_bit_number("AFD2"))
-print(is_16_bit_number("1"))
-print(is_16_bit_number("001"))
-print(is_16_bit_number("00001"))
-print(is_16_bit_number("12345"))
 
 
 
