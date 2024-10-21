@@ -11,7 +11,7 @@ Skeleton:
 Rules:
     Trailing 0's are ok so long as they dont' imply the segment to being a number larger than 16 bits although if it becomes too hard to code then ideally we don't want trailing 0's
     Notation can be shortened where consecutive segments of 0's can be replaced with a `::` (replacing an arbitrary number of 0's). A `::` can only appear at most once. This can be used on leading or trailing 0's of the address and includes the whole address being 0's.
-    An address can have IPv4 embedding via the form x1:x2:x3:x4:x5:x6:d1.d2.d3.d4 where each xi is a 16 bit numebr and each dj is an 8 bit number. The same normal rules for double colon applies in the first 6 segmetns whilst the  
+    An address can have IPv4 embedding via the form x1:x2:x3:x4:x5:x6:d1.d2.d3.d4 where each xi is a 16 bit numebr and each dj is an 8 bit decimal number. The same normal rules for double colon applies in the first 6 segments. Please correct me if I'm wrong however to the best of my knoweldge through reading RFC 4291: IPv4 embeddings into IPv6 addresses are only the 'standard' IPv4 format people are used to seeing and none of the alternative formats are allowed both due to clashes with IPv6 but also part of the reason for IPv6's simple syntax is to do away with the complex possible formats that IPv4 could take.  
 
 Valid cases:
     0:0:0:0:0:0:0:1
@@ -44,10 +44,29 @@ def is_ip_v6_address_valid(ip_v6_address: str) -> bool:
     ip_v6_address = ip_v6_address.strip() #Remove any whitespace for formatting and reduce errors
     blocks = ip_v6_address.split(":")
     
-    if (len(blocks) < 3) or (len(blocks)>9):
-        #The smallest address representation is "::" which is 3 blocks and the largest is 8 semicolons which gives 9 blocks)
+    if (len(blocks)<3):
+        #The smallest address representation is "::" which is 3 blocks
         return False
 
+    if (blocks[-1].find(".") != -1): #If the last block contains dots then we should see if this is an IPv4 embdedded IPv6 address[...]
+        ipv4_end = blocks[-1]
+        ipv6_start = blocks[0:len(blocks)-1]
+        if (len(ipv6_start)>6): 
+            #The largest representation is 6 semicolons using a double colon on one end e.g. 1:2:3:4:5::(6.7.8.9) which gives 6 blocks as a possible maximum)
+            return False
+        else:
+            from is_ip_v4_address_valid import is_ip_v4_address_valid #No point re-writing code which already exists on this codebase :P
+            return (is_ip_v4_address_valid(ipv4_end) and test_blocks(ipv6_start))
+    
+    else: #[...]otherwise we just do a standard IPv6 test (without IPv4 embedding)
+        if (len(blocks)>9):
+            #The largest representation is 8 semicolons using a double colon on one end e.g. 1:2:3:4:5:6:7:: which gives 9 blocks as a possible maximum)
+            return False
+        else:
+            return test_blocks(blocks,8)
+
+
+def test_blocks(blocks: list, n: int) -> bool:
     number_of_empty = 0 
     index = 0
     for segment in blocks:
@@ -58,10 +77,15 @@ def is_ip_v6_address_valid(ip_v6_address: str) -> bool:
         else:
             if (is_16_bit_number(segment)==False):
                 return False
-
         index += 1
 
+    if (number_of_empty==0) and (len(blocks)!=n): #If there was no shortening through double colons but we have less blocks than defined through n (only expected values are 6 and 8)
+        return False
+    else: #It's passed all the tests so we return true
         return True
+
+
+
 
 def is_16_bit_number(x: str) -> bool:
     #Remember, this is in hexedecimal which means base 16 [0-F]
@@ -75,8 +99,6 @@ def is_16_bit_number(x: str) -> bool:
     except:
         #It wasn't valid hex
         return False
-
-
 
 
 
