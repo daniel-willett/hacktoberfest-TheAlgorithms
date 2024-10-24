@@ -56,7 +56,7 @@ def is_ip_v6_address_valid(ip_v6_address: str) -> bool:
             return False
         else:
             from is_ip_v4_address_valid import is_ip_v4_address_valid #No point re-writing code which already exists on this codebase :P
-            return (is_ip_v4_address_valid(ipv4_end) and test_blocks(ipv6_start))
+            return (is_ip_v4_address_valid(ipv4_end) and test_blocks(ipv6_start,6))
     
     else: #[...]otherwise we just do a standard IPv6 test (without IPv4 embedding)
         if (len(blocks)>9):
@@ -67,6 +67,9 @@ def is_ip_v6_address_valid(ip_v6_address: str) -> bool:
 
 
 def test_blocks(blocks: list, n: int) -> bool:
+    #We want to ignore the case "::" because this is the exception to the rule as technically you have 3 positions empty instead of 2
+    if (blocks == ['','','']):
+        return True
     number_of_empty = 0 
     index = 0
     for segment in blocks:
@@ -99,7 +102,3 @@ def is_16_bit_number(x: str) -> bool:
     except:
         #It wasn't valid hex
         return False
-
-
-
-
